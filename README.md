@@ -82,7 +82,7 @@ On session start, the pack reports git status, branch protection warnings, ahead
 brew install bguidolim/tap/my-claude-setup
 
 # 2. Register this tech pack
-mcs pack add https://github.com/bguidolim/mcs-core-pack
+mcs pack add bguidolim/mcs-core-pack
 
 # 3. Sync your project
 cd ~/Developer/my-project
