@@ -1,0 +1,155 @@
+schemaVersion: 1
+identifier: mcs-core-pack
+displayName: "Core Pack"
+description: Foundational settings, plugins, git workflows, and code navigation for Claude Code
+version: "1.0.0"
+minMCSVersion: "2026.2.25"
+
+# ---------------------------------------------------------------------------
+# Prompts — resolved interactively during `mcs configure`
+# ---------------------------------------------------------------------------
+prompts:
+  - key: BRANCH_PREFIX
+    type: input
+    label: "Branch prefix (e.g. feature) -> feature/add-login-screen"
+    default: "feature"
+
+# ---------------------------------------------------------------------------
+# Components (short IDs — auto-prefixed by engine with `mcs-core-pack.`)
+# ---------------------------------------------------------------------------
+components:
+  # ── Dependencies ────────────────────────────────────────────────────────
+  - id: homebrew
+    displayName: Homebrew
+    description: macOS package manager
+    type: brewPackage
+    shell: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    doctorChecks:
+      - type: commandExists
+        name: Homebrew
+        section: Dependencies
+        command: brew
+
+  - id: node
+    displayName: Node.js
+    description: JavaScript runtime (for npx-based MCP servers)
+    dependencies: [homebrew]
+    brew: node
+
+  - id: gh
+    displayName: GitHub CLI
+    description: GitHub CLI for PR operations
+    dependencies: [homebrew]
+    brew: gh
+
+  - id: jq
+    description: JSON processor (used by session hooks)
+    dependencies: [homebrew]
+    brew: jq
+
+  - id: uv
+    description: Python package runner (for Serena MCP server)
+    dependencies: [homebrew]
+    brew: uv
+
+  # ── MCP Servers ─────────────────────────────────────────────────────────
+  - id: serena
+    displayName: Serena
+    description: Semantic code navigation, symbol editing, and project context via LSP
+    dependencies: [uv]
+    mcp:
+      command: uvx
+      args:
+        - "--from"
+        - "git+https://github.com/oraios/serena"
+        - "serena"
+        - "start-mcp-server"
+        - "--context=claude-code"
+        - "--project-from-cwd"
+
+  # ── Plugins ─────────────────────────────────────────────────────────────
+  - id: plugin-explanatory-output
+    displayName: explanatory-output-style
+    description: Enhanced output with educational insights and structured formatting
+    plugin: "explanatory-output-style@claude-plugins-official"
+
+  - id: plugin-pr-review
+    displayName: pr-review-toolkit
+    description: Specialized PR review agents
+    plugin: "pr-review-toolkit@claude-plugins-official"
+
+  - id: plugin-ralph-loop
+    displayName: ralph-loop
+    description: Iterative refinement loop for complex multi-step tasks
+    plugin: "ralph-loop@claude-plugins-official"
+
+  - id: plugin-claude-md
+    displayName: claude-md-management
+    description: Audit and improve CLAUDE.md files across repositories
+    plugin: "claude-md-management@claude-plugins-official"
+
+  - id: plugin-claude-hud
+    displayName: claude-hud
+    description: Context usage, active tools, running agents, and todo progress
+    plugin: claude-hud@jarrodwatts/claude-hud
+
+  # ── Hooks ───────────────────────────────────────────────────────────────
+  - id: hook-session-start
+    displayName: Session start hook
+    description: Shows git status, branch protection, and open PRs on session start
+    dependencies: [jq]
+    isRequired: true
+    hookEvent: SessionStart
+    hook:
+      source: hooks/session_start.sh
+      destination: session_start.sh
+
+  # ── Commands ────────────────────────────────────────────────────────────
+  - id: command-commit
+    displayName: /commit command
+    description: Stages, commits, and pushes changes without PR creation
+    command:
+      source: commands/commit.md
+      destination: commit.md
+
+  # ── Configuration ───────────────────────────────────────────────────────
+  - id: settings
+    displayName: Settings
+    description: Plan mode, always-thinking, env vars, hooks config, plugins
+    isRequired: true
+    settingsFile: config/settings.json
+
+  - id: gitignore
+    displayName: Global gitignore
+    description: Core gitignore entries
+    isRequired: true
+    gitignore:
+      - .claude/settings.local.json
+      - .claude/.mcs-project
+
+# ---------------------------------------------------------------------------
+# Templates — CLAUDE.local.md sections
+# ---------------------------------------------------------------------------
+templates:
+  - sectionIdentifier: serena
+    contentFile: templates/serena.md
+
+  - sectionIdentifier: git
+    placeholders:
+      - __BRANCH_PREFIX__
+    contentFile: templates/git.md
+
+# ---------------------------------------------------------------------------
+# Supplementary doctor checks
+# ---------------------------------------------------------------------------
+supplementaryDoctorChecks:
+  - type: hookEventExists
+    name: SessionStart hook
+    section: Hooks
+    event: SessionStart
+
+  - type: settingsKeyEquals
+    name: Plan mode enabled
+    section: Settings
+    keyPath: permissions.defaultMode
+    expectedValue: plan
