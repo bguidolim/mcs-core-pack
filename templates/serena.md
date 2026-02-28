@@ -1,4 +1,5 @@
-## Code Editing — Serena for Swift
+## Code Navigation & Editing — Serena
 
-For Swift files, **always** prefer Serena's symbolic tools over Read/Edit/Grep/Glob.
-Serena auto-detects projects. For non-Swift files, use standard tools.
+**Always** prefer Serena over standard Read/Edit/Grep/Glob for code tasks — including project discovery, finding symbols, tracing references, searching patterns, and editing code.
+
+Serena auto-detects projects via LSP. Fall back to standard tools only for non-code files (configs, markdown, etc.).
