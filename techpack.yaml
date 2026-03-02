@@ -117,6 +117,7 @@ components:
     description: Core gitignore entries
     gitignore:
       - "*.local.*"
+      - ".serena"
 
 # ---------------------------------------------------------------------------
 # Templates — CLAUDE.local.md sections
