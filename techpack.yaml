@@ -125,6 +125,8 @@ components:
 templates:
   - sectionIdentifier: serena
     contentFile: templates/serena.md
+    dependencies:
+      - serena
 
   - sectionIdentifier: git
     placeholders:
