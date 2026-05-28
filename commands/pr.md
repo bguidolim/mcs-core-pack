@@ -40,19 +40,22 @@ If the detected base **is not** the default, confirm with `AskUserQuestion`. Oth
 
 **Title**: `TICKET: brief description`, under 72 chars.
 
-**Body**: be concise. Write for a reviewer with zero context. Match length to the complexity of the change, not the size of the diff. A few sentences is usually right.
+**Body**: write for a reviewer with zero context. Match length to the *complexity* of the change, not the size of the diff. Most PRs land in **2–5 sentences total**. A one-line rename or config bump is a one-line PR.
 
-Judgment rules a "be concise" instruction can't infer:
+Judgment rules:
 
-- Lead with **why** — symptom or goal. Don't restate the title.
+- Lead with **why** — symptom, goal, or constraint. Don't restate the title.
 - Describe **behavior**, not implementation. No file/class/method/line names in the body — the diff shows those.
+- **If a section would mostly restate what the diff already shows, omit it.** A "Changes" recap is almost never worth writing — the diff is the changes.
+- **Don't list unchanged behavior.** If a bullet ends in "(unchanged)" or describes something the PR didn't touch, delete it. Reviewers assume unchanged behavior stays unchanged; call it out only when a reviewer would otherwise reasonably suspect it broke.
+- **Tell the why once.** Don't write the same story at both the behavior level and the mechanism level in separate paragraphs — pick the level the reviewer needs and stay there.
+- Don't *add* metadata lines that restate the title or branch (`Linked ticket: …`, `Ticket: …`, `JIRA: …`, `Branch: …`) — the title carries the ticket. If the template provides such a field, fill it; otherwise don't invent one.
 - Don't report CI-verifiable output (test counts, lint, typecheck, coverage).
 - Don't add checkmarks or task-list checkboxes unless the template provides them.
-- Don't invent sections ("Design notes", "Out of scope", etc.).
-- Don't duplicate between Summary and Changes.
-- **Test plan**: imperatives + expected result, e.g. "Run `mcs sync` with a drifted lockfile → expect the migration-hint warning". Numbered if order matters; bullets otherwise. If nothing to verify manually, say so in one line.
+- Don't invent sections ("Context", "Background", "Design notes", "Out of scope", etc.) to pad the body.
+- **Test plan**: imperatives + expected result, e.g. "Run `mcs sync` with a drifted lockfile → expect the migration-hint warning". Numbered if order matters; bullets otherwise. If nothing to verify manually, say so in one line — don't omit the section, but don't pad it either.
 
-**Template**: check `.github/`, repo root, `docs/` for `PULL_REQUEST_TEMPLATE.md` (case-insensitive). If `.github/PULL_REQUEST_TEMPLATE/` has multiples, ask which. Use the template's headings and order; empty sections get `N/A` on one line — do not pad. Keep template-provided checkboxes. No template → use `## Why` · `## Changes` · `## Test plan`.
+**Template**: check `.github/`, repo root, `docs/` for `PULL_REQUEST_TEMPLATE.md` (case-insensitive). If `.github/PULL_REQUEST_TEMPLATE/` has multiples, ask which. Use the template's headings and order; empty sections get `N/A` on one line — do not pad. Keep template-provided checkboxes. No template → use `## Why` + `## Test plan` only. Add a `## Changes` section **only** if there's something the diff genuinely can't convey (a behavior toggle, a migration step, a non-obvious sequencing) — never as a file-by-file recap.
 
 Create with `gh pr create --base <branch>`, body via HEREDOC.
 
