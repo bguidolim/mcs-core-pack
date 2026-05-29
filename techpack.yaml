@@ -48,11 +48,6 @@ components:
     brew: jq
 
   # ── Plugins ─────────────────────────────────────────────────────────────
-  - id: plugin-ralph-loop
-    displayName: ralph-loop
-    description: Iterative refinement loop for complex multi-step tasks
-    plugin: "ralph-loop@claude-plugins-official"
-
   - id: plugin-claude-md
     displayName: claude-md-management
     description: Audit and improve CLAUDE.md files across repositories

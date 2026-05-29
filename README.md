@@ -25,7 +25,6 @@ On session start, the pack reports git status, branch protection warnings, ahead
 
 | Plugin | Description |
 |--------|-------------|
-| **ralph-loop** | Iterative refinement loop for complex multi-step tasks |
 | **claude-md-management** | Audit and improve `CLAUDE.md` files across repositories |
 | **claude-hud** | On-screen display showing context usage, active tools, and agent status |
 | **pr-review-toolkit** | Specialized review agents for comprehensive PR analysis |
@@ -56,9 +55,8 @@ On session start, the pack reports git status, branch protection warnings, ahead
 |---------|-------|---------|
 | `defaultMode` | `plan` | Claude asks for approval before making changes |
 | `alwaysThinkingEnabled` | `true` | Extended thinking on every response |
-| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | `claude-sonnet-4-6` | Upgrades lightweight model tasks to Sonnet |
+| `useAutoModeDuringPlan` | `true` | Skips clarifying questions while planning |
 | `ENABLE_TOOL_SEARCH` | `1` | Enables deferred tool search for MCP servers |
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | `1` | Disables non-essential telemetry traffic |
 | `attribution.commit` | `""` | Suppresses Claude Code attribution in commit messages |
 | `attribution.pr` | `""` | Suppresses Claude Code attribution in PR descriptions |
 
