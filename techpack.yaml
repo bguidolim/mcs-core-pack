@@ -97,6 +97,14 @@ components:
       source: commands/review-pr.md
       destination: review-pr.md
 
+  # ── Skills ──────────────────────────────────────────────────────────────
+  - id: skill-grill-me
+    displayName: Grill Me skill
+    description: Ask tough questions to prepare for planning sessions
+    dependencies: [node]
+    type: skill
+    shell: "npx -y skills add mattpocock/skills --skill grill-me -g -a claude-code -y"
+
   # ── Configuration ───────────────────────────────────────────────────────
   - id: settings
     displayName: Settings

@@ -43,6 +43,14 @@ On session start, the pack reports git status, branch protection warnings, ahead
 | `/pr` | Full pipeline: commit > push > create PR via `gh` with ticket extraction |
 | `/review-pr` | Context-aware PR review using specialized agents (code quality, tests, errors, simplification) |
 
+### Skills
+
+| Skill | Description |
+|-------|-------------|
+| **grill-me** | Interviews you with tough questions to pressure-test a plan or design before you build it |
+
+> Installed from the [`skills`](https://github.com/mattpocock/skills) registry via `npx` during `mcs sync` (requires Node.js).
+
 ### Templates (CLAUDE.local.md)
 
 | Section | Instructions |
