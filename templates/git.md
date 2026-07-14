@@ -4,7 +4,9 @@
 - Do not post GitHub comments unless explicitly asked
 
 ## Git & GitHub
-- Branch naming: `__BRANCH_PREFIX__/{ticket-and-small-title}`
+- Branch naming: `__BRANCH_PREFIX__/{UPPERCASE-TICKET}-short-slug`
+- Keep the ticket uppercase.
+- Lowercase only the slug.
 - **Never commit without being asked**
 - Use `gh` command for GitHub queries (auth already configured)
 
