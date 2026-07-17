@@ -47,7 +47,7 @@ On session start, the pack reports git status, branch protection warnings, ahead
 
 | Skill | Description |
 |-------|-------------|
-| **grill-me** | Interviews you with tough questions to pressure-test a plan or design before you build it |
+| **grilling** | Interviews you with tough questions to pressure-test a plan or design before you build it |
 
 > Installed from the [`skills`](https://github.com/mattpocock/skills) registry via `npx` during `mcs sync` (requires Node.js).
 
