@@ -98,12 +98,12 @@ components:
       destination: review-pr.md
 
   # ── Skills ──────────────────────────────────────────────────────────────
-  - id: skill-grill-me
-    displayName: Grill Me skill
-    description: Ask tough questions to prepare for planning sessions
+  - id: skill-grilling
+    displayName: Grilling skills
+    description: Stress-test a plan before building it
     dependencies: [node]
     type: skill
-    shell: "npx -y skills add mattpocock/skills --skill grilling -g -a claude-code -y"
+    shell: "npx -y skills add mattpocock/skills --skill grilling --skill grill-me -g -a claude-code -y"
 
   # ── Configuration ───────────────────────────────────────────────────────
   - id: settings

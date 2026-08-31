@@ -15,6 +15,7 @@ main() {
     echo "$input_data" | jq '.' >/dev/null 2>&1 || exit 0
 
     # Build context
+    local NL=$'\n'
     local context=""
 
     # === TIMESTAMP ===
@@ -22,33 +23,33 @@ main() {
 
     # === GIT STATUS ===
     if branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); then
-        context+="\nBranch: $branch"
+        context+="${NL}Branch: $branch"
 
         # Branch protection warning
         if [[ "$branch" == "main" || "$branch" == "develop" || "$branch" == "master" || "$branch" == release/* || "$branch" == hotfix/* ]]; then
-            context+="\n⚠️ WARNING: On protected branch '$branch' - create a feature branch before making changes"
+            context+="${NL}⚠️ WARNING: On protected branch '$branch' - create a feature branch before making changes"
         fi
 
         # Uncommitted changes
         if changes=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' '); then
-            [[ "$changes" -gt 0 ]] && context+="\nUncommitted: $changes files"
+            [[ "$changes" -gt 0 ]] && context+="${NL}Uncommitted: $changes files"
         fi
 
         # Stash status
         if stash_count=$(git stash list 2>/dev/null | wc -l | tr -d ' '); then
-            [[ "$stash_count" -gt 0 ]] && context+="\n📦 Stashed changes: $stash_count"
+            [[ "$stash_count" -gt 0 ]] && context+="${NL}📦 Stashed changes: $stash_count"
         fi
 
         # Merge conflict detection
         if git ls-files -u 2>/dev/null | grep -q .; then
-            context+="\n🔴 MERGE CONFLICTS DETECTED - resolve before proceeding"
+            context+="${NL}🔴 MERGE CONFLICTS DETECTED - resolve before proceeding"
         fi
     fi
 
     # === REPO NAME ===
     if command -v gh >/dev/null 2>&1; then
         if repo_name=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>/dev/null); then
-            [[ -n "$repo_name" ]] && context+="\nRepo: $repo_name"
+            [[ -n "$repo_name" ]] && context+="${NL}Repo: $repo_name"
         fi
     fi
 
@@ -58,15 +59,15 @@ main() {
             behind=$(echo "$counts" | cut -f1)
             ahead=$(echo "$counts" | cut -f2)
             if [[ "$behind" -gt 0 && "$ahead" -gt 0 ]]; then
-                context+="\n↕️ Branch diverged: $ahead ahead, $behind behind remote"
+                context+="${NL}↕️ Branch diverged: $ahead ahead, $behind behind remote"
             elif [[ "$ahead" -gt 0 ]]; then
-                context+="\n⬆️ $ahead commit(s) ahead of remote (unpushed)"
+                context+="${NL}⬆️ $ahead commit(s) ahead of remote (unpushed)"
             elif [[ "$behind" -gt 0 ]]; then
-                context+="\n⬇️ $behind commit(s) behind remote (pull needed)"
+                context+="${NL}⬇️ $behind commit(s) behind remote (pull needed)"
             fi
         fi
     elif [[ -n "${branch:-}" && "$branch" != "main" && "$branch" != "develop" && "$branch" != "master" && "$branch" != release/* && "$branch" != hotfix/* ]]; then
-        context+="\n🔗 No remote tracking branch (push with -u to set upstream)"
+        context+="${NL}🔗 No remote tracking branch (push with -u to set upstream)"
     fi
 
     # === OPEN PR FOR BRANCH ===
@@ -76,7 +77,7 @@ main() {
             pr_title=$(echo "$pr_info" | jq -r '.title' 2>/dev/null)
             pr_state=$(echo "$pr_info" | jq -r '.state' 2>/dev/null)
             if [[ -n "$pr_number" && "$pr_state" == "OPEN" ]]; then
-                context+="\n🔀 Open PR #$pr_number: $pr_title"
+                context+="${NL}🔀 Open PR #$pr_number: $pr_title"
             fi
         fi
     fi
