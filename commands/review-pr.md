@@ -2,7 +2,7 @@
 
 Run a context-aware pull request review using multiple specialized agents, each focusing on a different aspect of code quality. This is a **read-only review** — do NOT make code changes or post GitHub comments unless explicitly asked.
 
-Arguments: $ARGUMENTS (optional — PR number/URL, review aspects, or flags)
+Arguments: $ARGUMENTS (optional — PR number/URL, review aspects, flags, or `target <branch>` to set the base for a pre-PR review)
 
 ## Steps
 
@@ -14,7 +14,12 @@ Determine the PR under review:
 2. If a PR number or URL is found, run: `gh pr view <number-or-url> --json number,title,body,headRefName,baseRefName,url,state`
 3. If no PR identifier is provided, run: `gh pr view --json number,title,body,headRefName,baseRefName,url,state` (uses current branch).
 4. If no PR exists for the current branch, treat this as a **pre-PR review**:
-   - Determine the base branch by trying in order: `origin/develop`, `origin/main`, `origin/master`.
+   - Base branch: the one named in `$ARGUMENTS` as `target <x>`, `base <x>`, or `--base <x>`. A bare
+     token is never a branch here — Step 1.1 already reads bare tokens as aspect keywords. Else the
+     repository default from
+     `gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'`, falling back to
+     `git symbolic-ref --short refs/remotes/origin/HEAD` if `gh` fails. Never probe a fixed list.
+   - Diff against the remote-tracking ref, `origin/<base>`, so a stale local branch is never used.
    - All diffs will be computed against this base.
 5. Extract and note: **PR title**, **PR description**, **head branch**, **base branch**, **ticket number** (from branch pattern `*/{ticket}-*` or commit messages), **PR URL** (if exists).
 
@@ -31,7 +36,10 @@ Ensure the local workspace has the PR changes:
 
 ### 3. Read the Diff (BLOCKING — must complete before Step 4)
 
-Identify changed files and read the full diff: `git diff <base>...<head>`
+Identify changed files and read the full diff: `git diff origin/<base>...HEAD`.
+
+For a **pre-PR review** also read `git diff` and `git diff --staged` — the changes under review are
+still in the working tree, and a three-dot range never includes them.
 
 ### 4. Search Project Knowledge (depends on Step 3 output)
 
