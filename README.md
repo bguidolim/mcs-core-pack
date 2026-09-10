@@ -1,111 +1,88 @@
+<div align="center">
+
 # Dev Essentials
 
-A [tech pack](https://github.com/mcs-cli/mcs) that provides foundational settings, plugins, and git workflows for Claude Code.
+### Every session starts in plan mode and ends in a reviewable pull request.
 
-Built for the [`mcs`](https://github.com/mcs-cli/mcs) configuration engine.
+[![MCS tech pack](https://img.shields.io/badge/MCS-tech%20pack-6f42c1)](https://github.com/mcs-cli/mcs)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-compatible-d97757)](https://docs.anthropic.com/en/docs/claude-code)
+![macOS](https://img.shields.io/badge/platform-macOS-111111)
+![License](https://img.shields.io/badge/license-MIT-2ea44f)
 
-```
+</div>
+
+Claude Code will happily start editing on `main`, write a commit message that restates the diff, and open a pull request with a file-by-file recap nobody needs to read. This pack changes the defaults: it plans before it edits, commits only what is actually staged, and writes pull requests aimed at a reviewer with zero context.
+
+```text
 identifier: dev
 requires:   mcs >= 2026.2.28
 ```
 
----
+## Install
 
-## What Is This?
+```bash
+brew install mcs-cli/tap/mcs      # 1. install mcs
+mcs pack add mcs-cli/dev          # 2. register this pack
+mcs sync --global --pack dev      # 3. install globally (~/.claude)
+mcs doctor                        # 4. verify everything is healthy
+```
 
-This pack sets up the baseline Claude Code experience — plan mode by default, extended thinking, structured git workflows, and a curated set of plugins.
+**Prerequisites:** macOS, [Homebrew](https://brew.sh), and [Claude Code](https://docs.anthropic.com/en/docs/claude-code). `mcs` installs the remaining dependencies through Homebrew: `gh` for pull request operations, `jq` for the session hook, and Node.js for the skill installer.
 
-On session start, the pack reports git status, branch protection warnings, ahead/behind tracking, and open PRs.
+Global installation is recommended. The pack's only question is a personal branch-naming convention, so install once and every project gets the same git workflow. A repository that needs a different prefix can run `mcs sync --pack dev` from inside it. Drop `--pack dev` to be asked which of your registered packs to sync.
 
----
+## How it works
 
-## What's Included
+**Nothing here guesses.** Every command reads the actual diff, the actual branch, and the actual template.
 
-### Plugins
+1. **Sync** — settings, plugins, commands, and the git section of `CLAUDE.local.md` are installed. Nothing runs during a session that wasn't put there at sync time.
+2. **Session start** — a hook reports the repository and branch, a warning if the branch is protected, uncommitted and stashed counts, merge conflicts, how far ahead or behind the remote you are (or that no upstream is set), and any open pull request.
+3. **Planning** — plan mode is the default, so Claude proposes before it edits. `/grill-me` interviews you about that plan until the open questions are actually settled.
+4. **Shipping** — `/commit` stages named files and writes a message from what is staged, nothing else. `/pr` adds the push and the pull request, targeting the repository's default branch unless you name another, and shows you the title and body before anything is created.
+5. **Reviewing** — `/review-pr` runs specialized agents over the diff for code quality, tests, error handling, comments, and types. Read-only: it reports findings and changes nothing.
 
-| Plugin | Description |
-|--------|-------------|
-| **claude-md-management** | Audit and improve `CLAUDE.md` files across repositories |
-| **claude-hud** | On-screen display showing context usage, active tools, and agent status |
-| **pr-review-toolkit** | Specialized review agents for comprehensive PR analysis |
+## Configuration
 
-### Session Hooks
+Syncing asks one question: the branch prefix used in branch names.
 
-| Hook | Event | What It Does |
-|------|-------|-------------|
-| **session_start.sh** | `SessionStart` | Injects git status, branch protection warnings, ahead/behind tracking, open PRs |
+| Prompt | What it does | Default |
+|---|---|---|
+| **Branch prefix** | Sets the git branch naming convention, as in `feature/ABC-123-login` | `feature` |
 
-### Slash Commands
-
-| Command | Description |
-|---------|-------------|
-| `/commit` | Stage, commit, push — analyzes the actual diff, writes structured commit messages |
-| `/pr` | Full pipeline: commit > push > create PR via `gh` with ticket extraction |
-| `/review-pr` | Context-aware PR review using specialized agents (code quality, tests, errors, simplification) |
-
-### Skills
-
-| Skill | Description |
-|-------|-------------|
-| **grilling** | Interviews you with tough questions to pressure-test a plan or design before you build it |
-| **grill-me** | Explicit `/grill-me` entry point — hands off to `grilling` |
-
-> Installed from the [`skills`](https://github.com/mattpocock/skills) registry via `npx` during `mcs sync` (requires Node.js).
-
-### Templates (CLAUDE.local.md)
-
-| Section | Instructions |
-|---------|-------------|
-| **git** | Branch naming conventions, read-only PR reviews, commit message format |
-
-### Settings
+The pack also contributes these settings:
 
 | Setting | Value | Purpose |
-|---------|-------|---------|
-| `defaultMode` | `plan` | Claude asks for approval before making changes |
+|---|---|---|
+| `defaultMode` | `plan` | Claude proposes an approach before making changes |
 | `alwaysThinkingEnabled` | `true` | Extended thinking on every response |
 | `useAutoModeDuringPlan` | `true` | Skips clarifying questions while planning |
 | `ENABLE_TOOL_SEARCH` | `1` | Enables deferred tool search for MCP servers |
-| `attribution.commit` | `""` | Suppresses Claude Code attribution in commit messages |
-| `attribution.pr` | `""` | Suppresses Claude Code attribution in PR descriptions |
+| `attribution.commit` | `""` | No Claude Code attribution in commit messages |
+| `attribution.pr` | `""` | No Claude Code attribution in pull request descriptions |
 
----
+## What's included
 
-## Installation
+| Component | What it does |
+|---|---|
+| **claude-md-management** (plugin) | Audits and improves `CLAUDE.md` files across repositories |
+| **claude-hud** (plugin) | Shows context usage, active tools, running agents, and todo progress |
+| **pr-review-toolkit** (plugin) | The specialized review agents behind `/review-pr` |
+| **session_start.sh** (hook) | Reports repository and branch, protection warning, uncommitted and stashed counts, conflicts, ahead/behind or missing upstream, and any open PR |
+| **/commit** (command) | Stages named files, writes a message describing only what is staged, pushes |
+| **/pr** (command) | Commit, push, and open a pull request against the default branch — shown for approval before it is created |
+| **/review-pr** (command) | Read-only review across code quality, tests, error handling, comments, types, and simplification |
+| **grilling** + **grill-me** (skills) | Interviews you with tough questions to pressure-test a plan before you build it |
+| **git.md** (template) | Branch naming, read-only review rules, and commit message format in `CLAUDE.local.md` |
+| **config/settings.json** (settings) | Plan mode by default, always-on extended thinking, deferred tool search, and no Claude attribution in commits or PRs |
+| `*.local.*` (gitignore) | Keeps `CLAUDE.local.md` and other local files out of version control |
 
-### Prerequisites
+`mcs doctor` additionally checks that Homebrew is installed and that the `SessionStart` hook is registered.
 
-- macOS (Apple Silicon or Intel)
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
+> The skills are installed from the [`skills`](https://github.com/mattpocock/skills) registry via `npx` during `mcs sync`, which is why Node.js is a dependency.
 
-### Setup
+## Directory structure
 
-```bash
-# 1. Install mcs
-brew install mcs-cli/tap/mcs
-
-# 2. Register this tech pack
-mcs pack add mcs-cli/dev
-
-# 3. Sync your project
-cd ~/Developer/my-project
-mcs sync
-
-# 4. Verify everything is healthy
-mcs doctor
-```
-
-During `mcs sync`, you'll be prompted for:
-
-| Prompt | What It Does | Default |
-|--------|-------------|---------|
-| **Branch prefix** | Sets git branch naming convention (e.g. `feature/ABC-123-login`) | `feature` |
-
----
-
-## Directory Structure
-
-```
+```text
 dev/
 ├── techpack.yaml                  # Manifest — defines all components
 ├── config/
@@ -120,24 +97,18 @@ dev/
     └── git.md                     # Branch naming + commit conventions
 ```
 
----
-
-## You Might Also Be Interested In
+## You might also like
 
 | Pack | Description |
-|------|-------------|
-| [memory](https://github.com/mcs-cli/memory) | Persistent memory and knowledge management — gives Claude long-term recall across sessions |
+|---|---|
+| [memory](https://github.com/mcs-cli/memory) | Persistent, project-specific memory across sessions. Install it and `/pr` and `/review-pr` fold past decisions and known gotchas into their output; without it those steps are simply skipped |
 | [ios](https://github.com/mcs-cli/ios) | Xcode integration, simulator management, and Apple documentation |
-
----
 
 ## Links
 
 - [MCS](https://github.com/mcs-cli/mcs) — the configuration engine
-- [Creating Tech Packs](https://github.com/mcs-cli/mcs/blob/main/docs/creating-tech-packs.md) — guide for building your own
-- [Tech Pack Schema](https://github.com/mcs-cli/mcs/blob/main/docs/techpack-schema.md) — full YAML reference
-
----
+- [Creating Tech Packs](https://github.com/mcs-cli/mcs/blob/main/docs/creating-tech-packs.md)
+- [Tech Pack Schema](https://github.com/mcs-cli/mcs/blob/main/docs/techpack-schema.md)
 
 ## License
 

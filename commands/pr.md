@@ -6,11 +6,25 @@ description: Create Pull Request
 
 Git-only workflow: stage, commit, push, open PR. Never build or test.
 
-Arguments: $ARGUMENTS (optional, e.g. `target develop`, `skip commit`).
+Arguments: $ARGUMENTS (optional) — `target <branch>` / `base <branch>` / `--base <branch>` / a bare branch name to override the base; `skip commit`; `no-confirm` to create without the review step.
 
 ## 1. Analyze
 
-Run in parallel: `git status` (no `-uall`), `git diff` (staged + unstaged), `git log origin/HEAD..HEAD --oneline` (fall back to `origin/main` if needed).
+**Base branch.** If `$ARGUMENTS` names one — `target <x>`, `base <x>`, `--base <x>`, or a bare token that isn't a reserved word (`skip`, `commit`, `no-confirm`) — use it. Otherwise use the repository default:
+
+```
+gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+```
+
+If `gh` fails (offline, unauthenticated), fall back to `git symbolic-ref --short refs/remotes/origin/HEAD` and strip `origin/`. **Never scan remote branches. Never ask.**
+
+Then confirm `origin/<base>` resolves with `git rev-parse --verify -q origin/<base>`. **Verify whichever form produced the base, including an explicit argument.** Only if that fails — a narrow fetch refspec or an upstream rename can leave the ref absent locally — run `git fetch origin <base>` and verify again. Fetching costs about two seconds against 30ms for the check, so it is the recovery path, never the default one. If a branch you were *given* still doesn't resolve, stop and say so; never silently fall back to the default when the user named a branch.
+
+Keep the **bare** name — `gh pr create --base` takes `main`, not `origin/main`. Use `origin/<base>` wherever a ref is needed, so a stale local branch is never read.
+
+**If the current branch is the base, stop.** Say so and suggest creating a branch. Do not stage, commit, or push.
+
+Then run in parallel: `git status` (no `-uall`), `git diff` (staged + unstaged), `git log origin/<base>..HEAD --oneline`.
 
 Extract the **ticket** from the branch (`__BRANCH_PREFIX__/{ticket}-*` or `{ticket}-*`) or commits. Ask if missing.
 
@@ -26,42 +40,37 @@ After analyzing, search available memory/knowledge tools using keywords from the
 - Message: one-line summary + up to 3 bullets. HEREDOC.
 - Nothing staged → skip.
 
-## 4. Push and pick base branch
+## 4. Push
 
-In parallel:
+Push the current branch with `-u` if needed.
 
-**Push** with `-u` if needed.
-
-**Detect base**: default branch from `gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'`. For each remote branch (`git branch -r --sort=-committerdate`, excluding the current branch and `HEAD`), compute distance from HEAD to the merge-base via `git rev-list --count <merge-base>..HEAD`. Smallest distance wins; strip `origin/`. Fall back to default on failure.
-
-If the detected base **is not** the default, confirm with `AskUserQuestion`. Otherwise use it. Pass `--base <branch>` to `gh pr create`.
-
-## 5. Create the PR
+## 5. Draft the PR
 
 **Title**: `TICKET: brief description`, under 72 chars.
 
-**Body**: write for a reviewer with zero context. Match length to the *complexity* of the change, not the size of the diff. Most PRs land in **2–5 sentences total**. A one-line rename or config bump is a one-line PR.
+**Budget.** Whole body under 150 words. A one-line rename or config bump is a one-line PR. Only a template's own sections justify going longer.
 
-Judgment rules:
+**Shape.** Prose for the why — two or three plain sentences read faster than dashed fragments.
+
+Rules:
 
 - Lead with **why** — symptom, goal, or constraint. Don't restate the title.
-- Describe **behavior**, not implementation. No file/class/method/line names in the body — the diff shows those.
-- **If a section would mostly restate what the diff already shows, omit it.** A "Changes" recap is almost never worth writing — the diff is the changes.
-- **Don't list unchanged behavior.** If a bullet ends in "(unchanged)" or describes something the PR didn't touch, delete it. Reviewers assume unchanged behavior stays unchanged; call it out only when a reviewer would otherwise reasonably suspect it broke.
-- **Tell the why once.** Don't write the same story at both the behavior level and the mechanism level in separate paragraphs — pick the level the reviewer needs and stay there.
-- Don't *add* metadata lines that restate the title or branch (`Linked ticket: …`, `Ticket: …`, `JIRA: …`, `Branch: …`) — the title carries the ticket. If the template provides such a field, fill it; otherwise don't invent one.
-- Don't report CI-verifiable output (test counts, lint, typecheck, coverage).
-- Don't add checkmarks or task-list checkboxes unless the template provides them.
-- Don't invent sections ("Context", "Background", "Design notes", "Out of scope", etc.) to pad the body.
-- **Test plan**: imperatives + expected result, e.g. "Run `mcs sync` with a drifted lockfile → expect the migration-hint warning". Numbered if order matters; bullets otherwise. If nothing to verify manually, say so in one line — don't omit the section, but don't pad it either.
+- Describe **behavior**, not implementation. No file, class, or method names; the diff shows those.
+- If a sentence restates the diff, the title, or the branch, delete it. That includes `(unchanged)` notes and `Ticket:` / `Branch:` / `JIRA:` metadata lines.
+- Don't report CI-verifiable output — test counts, lint, typecheck, coverage.
+- Don't invent sections, and don't add checkboxes the template didn't provide.
 
-**Template**: check `.github/`, repo root, `docs/` for `PULL_REQUEST_TEMPLATE.md` (case-insensitive). If `.github/PULL_REQUEST_TEMPLATE/` has multiples, ask which. Use the template's headings and order; empty sections get `N/A` on one line — do not pad. Keep template-provided checkboxes. No template → use `## Why` + `## Test plan` only. Add a `## Changes` section **only** if there's something the diff genuinely can't convey (a behavior toggle, a migration step, a non-obvious sequencing) — never as a file-by-file recap.
+**Test plan**: bullets, at most five, each an imperative + expected result — "Run `mcs sync` with a drifted lockfile → expect the migration-hint warning". Number them instead if order matters. If nothing to verify manually, say so in one line — don't omit the section, but don't pad it either.
 
-Create with `gh pr create --base <branch>`, body via HEREDOC.
+**Template**: check `.github/`, repo root, and `docs/` for `PULL_REQUEST_TEMPLATE.md` (case-insensitive). If `.github/PULL_REQUEST_TEMPLATE/` has multiples, ask which. Use its headings and order — **all** of them, including a `## Changes` if the template provides one — and apply the budget within each section. Keep template-provided checkboxes. Empty sections get `N/A` on one line.
 
-## 6. Report
+No template → `## Why` + `## Test plan`, and nothing else unless the change carries something the diff genuinely can't show (a migration step, a behavior toggle, non-obvious sequencing).
 
-Print the PR URL.
+## 6. Review and create
+
+Print the title and the full body, then ask with `AskUserQuestion`: **Create** / **Revise** / **Cancel**. On *Revise*, apply the feedback and show it again. Skip this step only when `$ARGUMENTS` contains `no-confirm`.
+
+On approval, create with `gh pr create --base <base>`, body via HEREDOC. Print the PR URL.
 
 ## 7. Evaluate learnings
 
