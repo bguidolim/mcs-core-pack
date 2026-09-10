@@ -74,6 +74,14 @@ components:
       destination: session_start.sh
 
   # ── Commands ────────────────────────────────────────────────────────────
+  - id: command-make-plan
+    displayName: /make-plan command
+    description: Researches, grills the open decisions, and writes a short plan
+    dependencies: [skill-grilling]
+    command:
+      source: commands/make-plan.md
+      destination: make-plan.md
+
   - id: command-commit
     displayName: /commit command
     description: Stages, commits, and pushes changes without PR creation
@@ -125,6 +133,9 @@ templates:
     placeholders:
       - __BRANCH_PREFIX__
     contentFile: templates/git.md
+
+  - sectionIdentifier: code-style
+    contentFile: templates/code-style.md
 
 # ---------------------------------------------------------------------------
 # Supplementary doctor checks
