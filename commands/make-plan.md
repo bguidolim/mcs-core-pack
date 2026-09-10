@@ -12,9 +12,11 @@ Think as deeply as the objective warrants — a one-file change needs far less t
 
 ## 1. Frame
 
-**Call `EnterPlanMode` first**, unless already in plan mode. Nothing in this command edits a file — the mode is what guarantees it.
+**Call `EnterPlanMode` first**, unless already in plan mode. Nothing here touches project files — the mode is what guarantees it. The single exception is the plan file itself, written in Step 7.
 
 Then read `$ARGUMENTS`. If its first whitespace-separated token is exactly `quick`, set **quick mode** and drop that token; `quickly refactor the parser` is an objective, not a flag. Restate what remains in one line.
+
+**If the session already discussed this objective, that discussion is an input.** Often the command is invoked as "based on our discussion, plan this" — carry forward what it established: options ruled out, constraints agreed, decisions made. Research what it left open, not what it settled.
 
 ## 2. Search project knowledge
 
@@ -26,7 +28,7 @@ Read the actual code before proposing anything. Trace the real flow end to end, 
 
 **Facts are your job, decisions are the user's.** Never ask what you can look up. Dispatch sub-agents for broad searches; ask the user only what the codebase can't answer.
 
-If the code contradicts the objective's premise, say so now, before Step 4. A well-built plan for the wrong problem is the expensive failure here.
+If the code contradicts the objective's premise, stop before Step 4 — don't plan around it. Put the finding to the user with `AskUserQuestion`: what you found, and the real options, including doing nothing. Continue only on their answer. A well-built plan for the wrong problem is the expensive failure here.
 
 ## 4. Grill
 
@@ -37,7 +39,7 @@ Otherwise call the Skill tool with `grilling` and follow it — the design tree,
 - **Discrete choice → `AskUserQuestion`.** Your recommendation is option 1, its label suffixed `(Recommended)`. Cap is 4 questions per call: a wider frontier takes a second call, never a trimmed frontier.
 - **Genuinely open → prose**, in the skill's own format. A question with no enumerable answers isn't improved by inventing three.
 
-Batch the frontier. One question at a time is the slow path the rounds exist to avoid.
+Batch the frontier. One question at a time is the slow path the rounds exist to avoid. A decision the earlier conversation already settled is not on the frontier — don't re-ask it.
 
 `AskUserQuestion` is normally reserved for what you can't settle from sensible defaults. That bar doesn't apply here — the user ran this command to be asked. A decision you *could* default is still theirs to make.
 
@@ -54,13 +56,13 @@ Batch the frontier. One question at a time is the slow path the rounds exist to 
 - **Verify** — how the user confirms it worked. Bullets, at most four, each a check plus its expected result. One line saying so if there's nothing to check manually.
 - **Risks** — only when a step can fail in a way the user would want to hear about first. Omit the heading otherwise.
 
-**No Context section.** Not under that name or any other. What you learned while researching is not part of the plan — the two-sentence Why carries anything that changes a decision, and the rest belongs in the conversation or a memory file. This is the single biggest source of bloat.
+**No research narration.** What you learned while researching is not part of the plan. Where a `Context` heading is required — some plan-mode harnesses mandate one — the two-sentence Why goes under it and nothing else. Never let it grow into a summary of what you read; that belongs in the conversation or a memory file. This is the single biggest source of plan bloat.
 
-Cut every sentence defending a decision already settled with the user — they were there. A plan is what you'll do, not the case for doing it.
+Cut every sentence arguing *for* a decision already settled. The decision itself belongs in Step 6 as one line; the case for it belongs nowhere. A plan is what you'll do, not the argument that you should.
 
 ## 6. Carry the constraints
 
-End every plan with this block verbatim, plus anything the grilling settled:
+End every plan with this block verbatim, plus anything settled with the user — in the grilling round or earlier in the conversation. One line each, no rationale: the plan file outlives the conversation, so a decision that lives only in chat is lost.
 
 ```
 Constraints:
@@ -73,4 +75,6 @@ Emit it even when the project or user instructions already say the same — wher
 
 ## 7. Present
 
-Call `ExitPlanMode` with the plan. Don't edit anything before it's approved.
+Write the plan where the harness expects it — plan mode names a plan file; write there — then call `ExitPlanMode`. It takes no arguments and no plan content: it reads what you wrote and signals that you're ready for approval. Don't edit anything else before it's approved.
+
+If Step 3 ended the objective and the user chose not to proceed, there is no plan. Skip `ExitPlanMode` and report what you found.
